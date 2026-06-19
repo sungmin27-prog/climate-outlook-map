@@ -1,0 +1,13 @@
+# Private source data must never be committed.
+*.csv
+*.tsv
+private/
+.env
+.env.*
+work/
+
+# Local tooling
+node_modules/
+.netlify/
+.DS_Store
+Thumbs.db

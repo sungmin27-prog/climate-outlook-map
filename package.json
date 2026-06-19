@@ -1,0 +1,11 @@
+{
+  "name": "climate-outlook-map",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "analyze": "node scripts/analyze-csv.mjs",
+    "build:data": "node scripts/build-public-data.mjs",
+    "build:map": "node scripts/prepare-map.mjs",
+    "verify": "node scripts/verify-public.mjs"
+  }
+}
