@@ -214,7 +214,7 @@ function refresh() {
 async function start() {
   try {
     const [statisticsResponse, geoResponse] = await Promise.all([
-      fetch("./data/statistics.json"),
+      fetch("./data/statistics.json", { cache: "no-store" }),
       fetch("./data/regions.geojson"),
     ]);
     if (!statisticsResponse.ok || !geoResponse.ok) throw new Error("데이터 파일을 불러오지 못했습니다.");
