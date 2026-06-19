@@ -25,8 +25,9 @@ for await (const line of source) {
 
   const [yearRaw, region, , scenario, valueRaw] = line.split(",");
   const year = Number(yearRaw);
-  const value = Number(valueRaw);
-  if (!Number.isInteger(year) || !region || !scenario || !Number.isFinite(value)) continue;
+  const sourceValue = Number(valueRaw);
+  if (!Number.isInteger(year) || !region || !scenario || !Number.isFinite(sourceValue)) continue;
+  const value = sourceValue / 10_000;
 
   const key = `${region}\u001f${scenario}\u001f${year}`;
   const values = buckets.get(key);
@@ -77,7 +78,9 @@ const payload = {
     years: [2021, 2100],
     scenarios: ["SSP126", "SSP245", "SSP370", "SSP585"],
     rankCount,
-    unit: "억원",
+    sourceUnit: "천원",
+    unit: "천만원",
+    conversionDivisor: 10_000,
     measures: ["year", "mean", "p10", "p90"],
     disclosure: "개별 Rank 원자료를 제외한 지역·연도·시나리오별 요약 통계",
   },

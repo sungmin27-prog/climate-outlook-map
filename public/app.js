@@ -1,6 +1,6 @@
 const SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"];
 const PALETTE = ["#c9dfdc", "#7eb6aa", "#e9c568", "#e07a64", "#a63f52"];
-const UNIT = "억원";
+const UNIT = "천만원";
 const state = { scenario: "SSP245", year: 2050, region: "강원특별자치도 강릉시" };
 let statistics;
 let map;
@@ -10,7 +10,7 @@ let comparisonChart;
 let sortedMapValues = [];
 
 const $ = (id) => document.getElementById(id);
-const format = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+const format = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 });
 
 const valueAt = (region, scenario, year) => {
   const series = statistics.regions[region]?.series[scenario];
@@ -161,7 +161,7 @@ function chartOptions() {
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: "#748188", maxTicksLimit: 6, font: { size: 10 } }, border: { display: false } },
-      y: { grid: { color: "#edf0ef" }, ticks: { color: "#748188", maxTicksLimit: 5, font: { size: 10 }, callback: (value) => `${formatCompact(value)}억` }, border: { display: false } },
+      y: { grid: { color: "#edf0ef" }, ticks: { color: "#748188", maxTicksLimit: 5, font: { size: 10 }, callback: (value) => `${formatCompact(value)}천만` }, border: { display: false } },
     },
   };
 }
