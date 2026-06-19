@@ -30,6 +30,7 @@ const provinces = {
 
 const resolveRegion = (feature) => {
   const { code, name } = feature.properties;
+  if (code === "37310") return "대구광역시 군위군";
   if (code === "23030") return "인천광역시 미추홀구";
 
   const province = provinces[code.slice(0, 2)];
@@ -54,13 +55,15 @@ const features = geo.features
     if (!region) return null;
     return {
       type: "Feature",
-      properties: { region },
+      properties: { region, hasData: validRegions.has(region) },
       geometry: feature.geometry,
     };
   })
   .filter(Boolean);
 
-const covered = new Set(features.map((feature) => feature.properties.region));
+const covered = new Set(
+  features.filter((feature) => feature.properties.hasData).map((feature) => feature.properties.region),
+);
 const missing = [...validRegions].filter((region) => !covered.has(region));
 if (missing.length) {
   throw new Error(`Regions without geometry: ${missing.join(", ")}`);
@@ -71,4 +74,7 @@ console.log(JSON.stringify({
   outputPath,
   features: features.length,
   coveredRegions: covered.size,
+  noDataRegions: [...new Set(
+    features.filter((feature) => !feature.properties.hasData).map((feature) => feature.properties.region),
+  )],
 }, null, 2));

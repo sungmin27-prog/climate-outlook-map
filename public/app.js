@@ -1,5 +1,6 @@
 const SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"];
 const PALETTE = ["#c9dfdc", "#7eb6aa", "#e9c568", "#e07a64", "#a63f52"];
+const UNIT = "억원";
 const state = { scenario: "SSP245", year: 2050, region: "강원특별자치도 강릉시" };
 let statistics;
 let map;
@@ -75,14 +76,18 @@ function initMap(geojson) {
     style: styleFeature,
     onEachFeature(feature, layer) {
       const region = feature.properties.region;
+      const hasData = feature.properties.hasData !== false;
       layer.on({
-        click: () => selectRegion(region, false),
+        click: () => hasData && selectRegion(region, false),
         mouseover: () => layer.setStyle({ weight: 2, color: "#182127", fillOpacity: 0.92 }),
         mouseout: () => geoLayer.resetStyle(layer),
       });
       layer.bindTooltip(() => {
+        if (!hasData) {
+          return `<div class="map-tooltip"><strong>${region}</strong><span>원본 데이터 없음</span></div>`;
+        }
         const point = valueAt(region, state.scenario, state.year);
-        return `<div class="map-tooltip"><strong>${region}</strong><span>${state.year} · ${format.format(point?.[1] ?? 0)}</span></div>`;
+        return `<div class="map-tooltip"><strong>${region}</strong><span>${state.year} · ${format.format(point?.[1] ?? 0)}${UNIT}</span></div>`;
       }, { sticky: true });
     },
   }).addTo(map);
@@ -92,6 +97,9 @@ function initMap(geojson) {
 
 function styleFeature(feature) {
   const region = feature.properties.region;
+  if (feature.properties.hasData === false) {
+    return { fillColor: "#c9cfcd", fillOpacity: 0.72, color: "#ffffff", weight: 0.7 };
+  }
   const selected = region === state.region;
   return {
     fillColor: colorFor(valueAt(region, state.scenario, state.year)?.[1], sortedMapValues),
@@ -130,8 +138,8 @@ function updateStats() {
   $("regionName").textContent = record.locality;
   $("yearLabel").textContent = state.year;
   $("comparisonYear").textContent = state.year;
-  $("meanValue").textContent = format.format(point[1]);
-  $("rangeValue").textContent = `${format.format(point[2])}–${format.format(point[3])}`;
+  $("meanValue").textContent = `${format.format(point[1])}${UNIT}`;
+  $("rangeValue").textContent = `${format.format(point[2])}–${format.format(point[3])}${UNIT}`;
   $("changeValue").textContent = `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`;
   $("changeValue").style.color = change >= 0 ? "#c7554a" : "#087f72";
   $("percentileValue").textContent = `상위 ${Math.max(1, 100 - percentile)}%`;
@@ -148,12 +156,12 @@ function chartOptions() {
         backgroundColor: "#182127",
         padding: 10,
         displayColors: false,
-        callbacks: { label: (context) => `${context.dataset.label}: ${format.format(context.parsed.y)}` },
+        callbacks: { label: (context) => `${context.dataset.label}: ${format.format(context.parsed.y)}${UNIT}` },
       },
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: "#748188", maxTicksLimit: 6, font: { size: 10 } }, border: { display: false } },
-      y: { grid: { color: "#edf0ef" }, ticks: { color: "#748188", maxTicksLimit: 5, font: { size: 10 }, callback: (value) => formatCompact(value) }, border: { display: false } },
+      y: { grid: { color: "#edf0ef" }, ticks: { color: "#748188", maxTicksLimit: 5, font: { size: 10 }, callback: (value) => `${formatCompact(value)}억` }, border: { display: false } },
     },
   };
 }

@@ -24,10 +24,14 @@ for (const [region, record] of Object.entries(statistics.regions)) {
   }
 }
 
-const mappedRegions = new Set(geo.features.map((feature) => feature.properties.region));
+const mappedRegions = new Set(
+  geo.features.filter((feature) => feature.properties.hasData !== false).map((feature) => feature.properties.region),
+);
+const noDataRegions = [...new Set(
+  geo.features.filter((feature) => feature.properties.hasData === false).map((feature) => feature.properties.region),
+)];
 const missing = regionNames.filter((region) => !mappedRegions.has(region));
-const extra = [...mappedRegions].filter((region) => !statistics.regions[region]);
-if (missing.length || extra.length) throw new Error(`Map mismatch. Missing: ${missing}; extra: ${extra}`);
+if (missing.length) throw new Error(`Map mismatch. Missing: ${missing}`);
 
 console.log(JSON.stringify({
   regions: regionNames.length,
@@ -35,5 +39,6 @@ console.log(JSON.stringify({
   yearsPerScenario: 80,
   mapFeatures: geo.features.length,
   mappedRegions: mappedRegions.size,
+  noDataRegions,
   publicSourceFiles: sourceFiles.length,
 }, null, 2));

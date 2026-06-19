@@ -2,6 +2,8 @@
 
 지역을 지도에서 선택해 2021~2100년의 SSP 시나리오별 재난값 전망과 불확실성 범위를 보는 정적 웹 대시보드입니다.
 
+재난값의 단위는 `억원`입니다.
+
 ## 데이터 보호 구조
 
 - 원본 `전체시나리오_통합_전망데이터.csv`는 GitHub와 Netlify에 올리지 않습니다.
@@ -22,6 +24,8 @@ npm run build:map
 ```
 
 생성 결과는 228개 지역, 4개 시나리오, 80개 연도의 요약 통계입니다.
+
+원본 CSV에 없는 군위군은 지도 경계만 회색으로 표시하며, 툴팁에 `원본 데이터 없음`으로 표시합니다.
 
 ## 로컬 실행
 
@@ -45,4 +49,3 @@ python -m http.server 4173 --directory public
 ## 지도 경계
 
 행정경계는 [southkorea/southkorea-maps](https://github.com/southkorea/southkorea-maps)의 2013년 통계청 시군구 GeoJSON을 사용했습니다. 통합시 구 단위는 CSV의 시 단위로 묶고, 일부 변경 명칭을 현재 CSV 명칭에 연결했습니다.
-

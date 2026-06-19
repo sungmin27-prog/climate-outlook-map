@@ -77,6 +77,7 @@ const payload = {
     years: [2021, 2100],
     scenarios: ["SSP126", "SSP245", "SSP370", "SSP585"],
     rankCount,
+    unit: "억원",
     measures: ["year", "mean", "p10", "p90"],
     disclosure: "개별 Rank 원자료를 제외한 지역·연도·시나리오별 요약 통계",
   },
