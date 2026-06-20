@@ -84,13 +84,30 @@
           </article>
         </section>
 
+        <section class="chart-section distribution-section">
+          <div class="section-title">
+            <div>
+              <span>Probability distribution</span>
+              <h3>전국 지역별 재난값 확률분포</h3>
+            </div>
+            <div class="chart-title-actions">
+              <span class="chart-key selected-key"><i></i><b id="distributionSelection">선택 지역</b></span>
+              <span class="chart-unit">단위: 억원</span>
+            </div>
+          </div>
+          <div class="distribution-wrap"><canvas id="distributionChart"></canvas></div>
+        </section>
+
         <section class="chart-section">
           <div class="section-title">
             <div>
               <span>Time series</span>
               <h3>연도별 전망</h3>
             </div>
-            <span class="chart-key"><i></i>P10–P90</span>
+            <div class="chart-title-actions">
+              <span class="chart-key"><i></i>P10–P90</span>
+              <span class="chart-unit">단위: 억원</span>
+            </div>
           </div>
           <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
         </section>
@@ -101,13 +118,17 @@
               <span>Scenario comparison</span>
               <h3><b id="comparisonYear">2050</b>년 시나리오 비교</h3>
             </div>
+            <div class="chart-title-actions">
+              <span class="chart-key uncertainty-key"><i></i>P10–P90</span>
+              <span class="chart-unit">단위: 억원</span>
+            </div>
           </div>
           <div class="comparison-wrap"><canvas id="comparisonChart"></canvas></div>
         </section>
 
         <footer class="panel-footer">
           <span>50개 Rank 요약 통계</span>
-          <span>단위: 천만원 · 평균 · P10 · P90</span>
+          <span>KPI·지도: 천만원 · 차트: 억원</span>
         </footer>
       </aside>
     </main>

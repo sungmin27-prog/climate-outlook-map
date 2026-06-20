@@ -128,7 +128,13 @@ button, select, input { font: inherit; }
 .section-title h3 { margin: 3px 0 0; font-size: 16px; letter-spacing: 0; }
 .section-title h3 b { font: inherit; }
 .chart-key { display: flex; align-items: center; gap: 5px; text-transform: none !important; font-weight: 500 !important; }
+.chart-key b { font-weight: 600; }
 .chart-key i { width: 16px; height: 7px; background: rgba(8,127,114,.18); border: 1px solid rgba(8,127,114,.35); }
+.chart-title-actions { display: flex; align-items: flex-end; flex-direction: column; gap: 4px; }
+.chart-unit { color: var(--muted); font-size: 9px; }
+.selected-key i { width: 8px; height: 8px; border: 2px solid #fff; border-radius: 50%; background: #a63f52; box-shadow: 0 0 0 1px #a63f52; }
+.uncertainty-key i { width: 14px; height: 10px; border: 0; background: linear-gradient(#26343b,#26343b) center/1px 100% no-repeat, linear-gradient(#26343b,#26343b) center top/9px 1px no-repeat, linear-gradient(#26343b,#26343b) center bottom/9px 1px no-repeat; }
+.distribution-wrap { position: relative; height: 150px; }
 .chart-wrap { position: relative; height: 220px; }
 .comparison-wrap { position: relative; height: 150px; }
 .panel-footer { display: flex; justify-content: space-between; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }

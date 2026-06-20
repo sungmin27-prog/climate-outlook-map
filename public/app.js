@@ -1,16 +1,25 @@
 const SCENARIOS = ["SSP126", "SSP245", "SSP370", "SSP585"];
+const SCENARIO_LABELS = {
+  SSP126: "SSP1-2.6",
+  SSP245: "SSP2-4.5",
+  SSP370: "SSP3-7.0",
+  SSP585: "SSP5-8.5",
+};
 const PALETTE = ["#c9dfdc", "#7eb6aa", "#e9c568", "#e07a64", "#a63f52"];
 const UNIT = "천만원";
+const CHART_UNIT = "억원";
 const state = { scenario: "SSP245", year: 2050, region: "강원특별자치도 강릉시" };
 let statistics;
 let map;
 let geoLayer;
+let distributionChart;
 let trendChart;
 let comparisonChart;
 let sortedMapValues = [];
 
 const $ = (id) => document.getElementById(id);
 const format = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 });
+const toChartUnit = (value) => value / 10;
 
 const valueAt = (region, scenario, year) => {
   const series = statistics.regions[region]?.series[scenario];
@@ -54,7 +63,7 @@ function updateRegionOptions() {
 
 function initScenarioTabs() {
   $("scenarioTabs").innerHTML = SCENARIOS.map((scenario) =>
-    `<button type="button" data-scenario="${scenario}" class="${scenario === state.scenario ? "active" : ""}">${scenario}</button>`
+    `<button type="button" data-scenario="${scenario}" class="${scenario === state.scenario ? "active" : ""}">${SCENARIO_LABELS[scenario]}</button>`
   ).join("");
   $("scenarioTabs").addEventListener("click", (event) => {
     const button = event.target.closest("button[data-scenario]");
@@ -156,26 +165,118 @@ function chartOptions() {
         backgroundColor: "#182127",
         padding: 10,
         displayColors: false,
-        callbacks: { label: (context) => `${context.dataset.label}: ${format.format(context.parsed.y)}${UNIT}` },
+        callbacks: { label: (context) => `${context.dataset.label}: ${format.format(context.parsed.y)}${CHART_UNIT}` },
       },
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: "#748188", maxTicksLimit: 6, font: { size: 10 } }, border: { display: false } },
-      y: { grid: { color: "#edf0ef" }, ticks: { color: "#748188", maxTicksLimit: 5, font: { size: 10 }, callback: (value) => `${formatCompact(value)}${UNIT}` }, border: { display: false } },
+      y: { grid: { color: "#edf0ef" }, ticks: { color: "#748188", maxTicksLimit: 5, font: { size: 10 }, callback: (value) => `${formatCompact(value)}억` }, border: { display: false } },
     },
   };
 }
 
 const formatCompact = (value) => new Intl.NumberFormat("ko-KR", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 
+function densitySeries(values, points = 64) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+  const mean = sorted.reduce((sum, value) => sum + value, 0) / sorted.length;
+  const deviation = Math.sqrt(sorted.reduce((sum, value) => sum + ((value - mean) ** 2), 0) / sorted.length);
+  const range = Math.max(max - min, 0.01);
+  const bandwidth = Math.max(1.06 * deviation * (sorted.length ** -0.2), range / 40, 0.01);
+  const start = Math.max(0, min - range * 0.08);
+  const end = max + range * 0.08;
+  const densityAt = (x) => sorted.reduce((sum, value) => {
+    const z = (x - value) / bandwidth;
+    return sum + Math.exp(-0.5 * z * z);
+  }, 0) / (sorted.length * bandwidth * Math.sqrt(2 * Math.PI));
+  const series = Array.from({ length: points }, (_, index) => {
+    const x = start + ((end - start) * index) / (points - 1);
+    return { x, y: densityAt(x) };
+  });
+  const peak = Math.max(...series.map((point) => point.y), 1e-9);
+  return {
+    series: series.map((point) => ({ x: point.x, y: (point.y / peak) * 100 })),
+    densityAt: (x) => (densityAt(x) / peak) * 100,
+  };
+}
+
+function updateDistributionChart() {
+  const values = currentValues().map(toChartUnit);
+  const selected = toChartUnit(valueAt(state.region, state.scenario, state.year)[1]);
+  const record = statistics.regions[state.region];
+  const density = densitySeries(values);
+  const selectedDensity = density.densityAt(selected);
+  $("distributionSelection").textContent = `${record.locality} ${format.format(selected)}${CHART_UNIT}`;
+  const data = {
+    datasets: [
+      {
+        type: "line",
+        label: "전국 확률밀도",
+        data: density.series,
+        parsing: false,
+        borderColor: "#7eb6aa",
+        backgroundColor: "rgba(126,182,170,.22)",
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.32,
+        fill: true,
+      },
+      {
+        type: "line",
+        label: "선택 위치",
+        data: [{ x: selected, y: 0 }, { x: selected, y: selectedDensity }],
+        parsing: false,
+        borderColor: "rgba(166,63,82,.55)",
+        borderWidth: 1.2,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        fill: false,
+      },
+      {
+        type: "scatter",
+        label: record.locality,
+        data: [{ x: selected, y: selectedDensity }],
+        parsing: false,
+        pointRadius: 6,
+        pointHoverRadius: 7,
+        pointBackgroundColor: "#a63f52",
+        pointBorderColor: "#ffffff",
+        pointBorderWidth: 2,
+      },
+    ],
+  };
+  const options = chartOptions();
+  options.interaction = { intersect: false, mode: "nearest" };
+  options.scales.x = {
+    type: "linear",
+    grid: { display: false },
+    ticks: { color: "#748188", maxTicksLimit: 6, font: { size: 10 }, callback: (value) => `${formatCompact(value)}억` },
+    border: { display: false },
+  };
+  options.scales.y = { display: false, min: 0 };
+  options.plugins.tooltip.filter = (context) => context.dataset.label !== "선택 위치";
+  options.plugins.tooltip.callbacks.label = (context) => context.dataset.label === record.locality
+    ? `${record.locality}: ${format.format(context.parsed.x)}${CHART_UNIT}`
+    : "전국 지역별 상대 확률밀도";
+  if (distributionChart) {
+    distributionChart.data = data;
+    distributionChart.options = options;
+    distributionChart.update("none");
+  } else {
+    distributionChart = new Chart($("distributionChart"), { type: "line", data, options });
+  }
+}
+
 function updateTrendChart() {
   const series = statistics.regions[state.region].series[state.scenario];
   const data = {
     labels: series.map((row) => row[0]),
     datasets: [
-      { label: "P90", data: series.map((row) => row[3]), borderColor: "rgba(8,127,114,.2)", backgroundColor: "rgba(8,127,114,.13)", borderWidth: 1, pointRadius: 0, fill: false },
-      { label: "P10", data: series.map((row) => row[2]), borderColor: "rgba(8,127,114,.2)", backgroundColor: "rgba(8,127,114,.13)", borderWidth: 1, pointRadius: 0, fill: "-1" },
-      { label: "평균", data: series.map((row) => row[1]), borderColor: "#087f72", backgroundColor: "#087f72", borderWidth: 2.4, pointRadius: (ctx) => ctx.dataIndex === state.year - 2021 ? 4 : 0, pointBackgroundColor: "#ffffff", pointBorderWidth: 2, tension: 0.25 },
+      { label: "P90", data: series.map((row) => toChartUnit(row[3])), borderColor: "rgba(8,127,114,.2)", backgroundColor: "rgba(8,127,114,.13)", borderWidth: 1, pointRadius: 0, fill: false },
+      { label: "P10", data: series.map((row) => toChartUnit(row[2])), borderColor: "rgba(8,127,114,.2)", backgroundColor: "rgba(8,127,114,.13)", borderWidth: 1, pointRadius: 0, fill: "-1" },
+      { label: "평균", data: series.map((row) => toChartUnit(row[1])), borderColor: "#087f72", backgroundColor: "#087f72", borderWidth: 2.4, pointRadius: (ctx) => ctx.dataIndex === state.year - 2021 ? 4 : 0, pointBackgroundColor: "#ffffff", pointBorderWidth: 2, tension: 0.25 },
     ],
   };
   if (trendChart) {
@@ -186,26 +287,67 @@ function updateTrendChart() {
   }
 }
 
+const uncertaintyPlugin = {
+  id: "uncertaintyWhiskers",
+  afterDatasetsDraw(chart) {
+    const dataset = chart.data.datasets[0];
+    const metadata = chart.getDatasetMeta(0);
+    const yScale = chart.scales.y;
+    const { ctx } = chart;
+    ctx.save();
+    ctx.strokeStyle = "#26343b";
+    ctx.lineWidth = 1.4;
+    dataset.uncertainty.forEach(([p10, p90], index) => {
+      const bar = metadata.data[index];
+      if (!bar) return;
+      const top = yScale.getPixelForValue(p90);
+      const bottom = yScale.getPixelForValue(p10);
+      const cap = Math.min(12, bar.width * 0.55);
+      ctx.beginPath();
+      ctx.moveTo(bar.x, top);
+      ctx.lineTo(bar.x, bottom);
+      ctx.moveTo(bar.x - cap / 2, top);
+      ctx.lineTo(bar.x + cap / 2, top);
+      ctx.moveTo(bar.x - cap / 2, bottom);
+      ctx.lineTo(bar.x + cap / 2, bottom);
+      ctx.stroke();
+    });
+    ctx.restore();
+  },
+};
+
 function updateComparisonChart() {
-  const values = SCENARIOS.map((scenario) => valueAt(state.region, scenario, state.year)?.[1]);
+  const points = SCENARIOS.map((scenario) => valueAt(state.region, scenario, state.year));
+  const values = points.map((point) => toChartUnit(point[1]));
+  const uncertainty = points.map((point) => [toChartUnit(point[2]), toChartUnit(point[3])]);
   const data = {
-    labels: SCENARIOS,
-    datasets: [{ data: values, backgroundColor: ["#66a99c", "#356f9f", "#e9b949", "#e56b5d"], borderRadius: 3, borderSkipped: false, barThickness: 24 }],
+    labels: SCENARIOS.map((scenario) => SCENARIO_LABELS[scenario]),
+    datasets: [{ label: "평균", data: values, uncertainty, backgroundColor: ["#66a99c", "#356f9f", "#e9b949", "#e56b5d"], borderRadius: 3, borderSkipped: false, barThickness: 24 }],
   };
   const options = chartOptions();
   options.scales.x.ticks.font = { size: 10, weight: "600" };
+  options.scales.y.beginAtZero = true;
+  options.scales.y.suggestedMax = Math.max(...uncertainty.map(([, p90]) => p90)) * 1.08;
+  options.plugins.tooltip.callbacks.label = (context) => {
+    const [p10, p90] = uncertainty[context.dataIndex];
+    return [
+      `평균: ${format.format(context.parsed.y)}${CHART_UNIT}`,
+      `P10–P90: ${format.format(p10)}–${format.format(p90)}${CHART_UNIT}`,
+    ];
+  };
   if (comparisonChart) {
     comparisonChart.data = data;
     comparisonChart.options = options;
     comparisonChart.update("none");
   } else {
-    comparisonChart = new Chart($("comparisonChart"), { type: "bar", data, options });
+    comparisonChart = new Chart($("comparisonChart"), { type: "bar", data, options, plugins: [uncertaintyPlugin] });
   }
 }
 
 function refresh() {
   sortedMapValues = currentValues();
   updateStats();
+  updateDistributionChart();
   updateTrendChart();
   updateComparisonChart();
   if (geoLayer) geoLayer.setStyle(styleFeature);
