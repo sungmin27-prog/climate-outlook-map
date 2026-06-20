@@ -1,4 +1,4 @@
-# 기후 전망 지도
+# 호우재해 기후리스크 지도
 
 지역을 지도에서 선택해 2021~2100년의 SSP 시나리오별 재난값 전망과 불확실성 범위를 보는 정적 웹 대시보드입니다.
 
@@ -6,7 +6,7 @@
 
 ## 데이터 보호 구조
 
-- 원본 `전체시나리오_통합_전망데이터.csv`는 GitHub와 Netlify에 올리지 않습니다.
+- 원본은 Google Drive의 `/content/drive/MyDrive/Colab Notebooks/호우재해 물리적 리스크 평가(논문)/전체시나리오_통합_전망데이터.csv`를 사용하며, GitHub와 Netlify에는 올리지 않습니다.
 - `.gitignore`가 모든 CSV/TSV와 `private/` 폴더를 차단합니다.
 - 브라우저에는 개별 Rank 50개를 제외한 `평균`, `P10`, `P90`만 전달됩니다.
 - 공개 사이트의 `public/data/statistics.json`은 누구나 내려받을 수 있는 공개 집계 데이터입니다.
@@ -15,17 +15,17 @@
 
 ## 데이터 다시 만들기
 
-Node.js 20 이상에서 실행합니다. CSV 경로는 저장소 밖의 비공개 위치를 사용합니다.
+Node.js 20 이상에서 실행합니다. Google Drive를 `/content/drive`에 마운트한 Colab 환경에서는 기본 원본 경로가 자동으로 사용됩니다.
 
-```powershell
-npm run analyze -- "C:\private\전체시나리오_통합_전망데이터.csv"
-npm run build:data -- "C:\private\전체시나리오_통합_전망데이터.csv" "public\data\statistics.json"
+```bash
+npm run analyze
+npm run build:data
 npm run build:map
 ```
 
-생성 결과는 228개 지역, 4개 시나리오, 80개 연도의 요약 통계입니다.
+다른 환경에서는 원본 CSV 경로와 출력 경로를 명령행 인자로 지정할 수 있습니다.
 
-원본 CSV에 없는 군위군은 지도 경계만 회색으로 표시하며, 툴팁에 `원본 데이터 없음`으로 표시합니다.
+생성 결과는 229개 지역, 4개 시나리오, 80개 연도의 요약 통계입니다.
 
 ## 로컬 실행
 

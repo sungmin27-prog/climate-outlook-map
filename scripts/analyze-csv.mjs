@@ -1,11 +1,8 @@
 import fs from "node:fs";
 import readline from "node:readline";
 
-const input = process.argv[2];
-if (!input) {
-  console.error("Usage: node scripts/analyze-csv.mjs <csv-path>");
-  process.exit(1);
-}
+const defaultInput = "/content/drive/MyDrive/Colab Notebooks/호우재해 물리적 리스크 평가(논문)/전체시나리오_통합_전망데이터.csv";
+const input = process.argv[2] ?? defaultInput;
 
 const years = new Set();
 const regions = new Set();

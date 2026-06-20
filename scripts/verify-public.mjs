@@ -13,7 +13,7 @@ const walk = (directory) => fs.readdirSync(directory, { withFileTypes: true }).f
 
 const sourceFiles = walk(publicDir).filter((file) => /\.(csv|tsv)$/i.test(file));
 if (sourceFiles.length) throw new Error(`Source files found in public/: ${sourceFiles.join(", ")}`);
-if (regionNames.length !== 228) throw new Error(`Expected 228 regions, got ${regionNames.length}`);
+if (regionNames.length !== 229) throw new Error(`Expected 229 regions, got ${regionNames.length}`);
 if (statistics.meta.rankCount !== 50) throw new Error(`Expected 50 source ranks, got ${statistics.meta.rankCount}`);
 
 for (const [region, record] of Object.entries(statistics.regions)) {

@@ -2,12 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
 
-const input = process.argv[2];
+const defaultInput = "/content/drive/MyDrive/Colab Notebooks/호우재해 물리적 리스크 평가(논문)/전체시나리오_통합_전망데이터.csv";
+const input = process.argv[2] ?? defaultInput;
 const output = process.argv[3] ?? "public/data/statistics.json";
-if (!input) {
-  console.error("Usage: node scripts/build-public-data.mjs <private-csv> [output-json]");
-  process.exit(1);
-}
 
 const buckets = new Map();
 const source = readline.createInterface({
